@@ -1,0 +1,106 @@
+CREATE DATABASE RecipesDB;
+//The original recipes table
+//Columns subject to review
+//Names are currently unique, can be changed later
+CREATE TABLE Recipes (
+	RecipeName varchar(255) NOT NULL,
+	RecipePage varchar(255),
+	PRIMARY KEY (RecipeName)
+);
+//How to insert into the recipe table
+//Insert the relevant info for all non-null and desired columns
+//The page does not need to exist for it to be entered into the table, but should be created as part of the code calling this insert
+INSERT INTO Recipes (RecipeName, RecipePage)
+	VALUES ('ExampleName','(html route)');
+	
+//Creates a table of all ingredients in all recipes for use by search function
+CREATE TABLE RecipeIngredients (
+	RecipeName varchar(255) NOT NULL,
+	Ingredient varchar(255) NOT NULL,
+	FOREIGN KEY (RecipeName) REFERENCES Recipes(RecipeName),
+	FOREIGN KEY (Ingredient) REFERENCES Ingredients(Ingredient)
+);
+//How to insert into the Recipe ingredients table
+//Insert the relevant info for all non-null and desired columns
+INSERT INTO RecipeIngredients (RecipeName, Ingredient)
+	VALUES ('Pre-existing Recipe ID','Pre-existing Ingredient');
+
+
+//Creates a table of all ingredient food groups, for keying purposes
+CREATE TABLE FoodGroups (
+	Group varchar(255),
+	PRIMARY KEY (Group)
+);
+//How to insert into the FoodGroups table
+//Insert the relevant info for all non-null and desired columns
+//contains instructions to ignore the insert function if it would insert a duplicate
+INSERT IGNORE INTO RecipeIngredients (Group)
+	VALUES ('Ex. Food Group');
+
+//Creates a table of all ingredients for keying purposes
+CREATE TABLE Ingredients (
+	Ingredient varchar(255),
+	FoodGroup varchar(255) NOT NULL,
+	PRIMARY KEY (Ingredient),
+	FOREIGN KEY (FoodGroup) REFERENCES FoodGroups(Group)
+);
+//How to insert into the Ingredients table
+//Insert the relevant info for all non-null and desired columns
+//contains instructions to ignore the insert function if it would insert a duplicate
+INSERT IGNORE INTO RecipeIngredients (Ingredient, FoodGroup)
+	VALUES ('Ex. Ingredient','Pre-existing FoodGroup');
+
+
+//!!!
+//So, for each recipe, you would execute these queries in this order
+INSERT INTO Recipes (RecipeName, RecipePage)
+	VALUES ('ExampleName','(html route)');
+//This creates the recipe in it's table
+//For each ingredient
+//The first one on food groups could be ignored, as long as the associated food group is already in associated data table.
+INSERT IGNORE INTO RecipeIngredients (Group)
+	VALUES ('Ex. Food Group');
+INSERT IGNORE INTO RecipeIngredients (Ingredient, FoodGroup)
+	VALUES ('Ex. Ingredient','Pre-existing FoodGroup');
+INSERT INTO RecipeIngredients (RecipeName, Ingredient)
+	VALUES ('Pre-existing Recipe ID','Pre-existing Ingredient');
+//This sequence adds all relevant groups and ingredients into the relevant tables, then adds the key in the main search table (RecipeIngredients)
+//This sequence ensures that:
+//1. There are food groups such that can provide organization for drop-down menus
+//2. There are ingredients in a table keyed with their associated groups for selection in said drop-down menus
+//3. All ingredients in the searchable table exists as selections in the search menu
+
+
+
+
+//!!!
+//Needs a php (or equivalent) hand-off of search selections for the search query
+//The format of such a hand-off dramatically effects what the query looks like
+//The following code assumes that the hand-off is as an SQL table named Criteria, we'll have to work on if that's possible and how it's done, or other options
+
+//Inclusive Search
+SELECT RecipePage FROM ((Recipes
+	INNER JOIN RecipeIngredients ON RecipeName)
+	INNER JOIN Criteria ON Ingredient);
+
+//Exclusive Search
+CREATE TEMPORARY TABLE SearchResults AS
+	SELECT * FROM Recipes INNER JOIN RecipeIngredients ON RecipeName;
+	
+DELETE FROM SearchResults
+	WHERE NOT RecipeName in (SELECT DISTINCT RecipeName FROM SearchResults WHERE Ingredient in (SELECT DISTINCT Ingredient FROM Criteria);
+	
+SELECT * FROM SearchResults;
+
+	
+	
+
+
+
+
+	
+	
+	
+
+	
+	
